@@ -11,7 +11,10 @@ while(not exited):
     next = contents[cur] + cur
     if next > len(contents) - 1:
         exited = True
-    contents[cur]+=1
+    if contents[cur] < 3:
+        contents[cur]+=1
+    else:
+        contents[cur]-=1
     cur = next
     step += 1
 
