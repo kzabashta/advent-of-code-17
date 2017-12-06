@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 f = open('/Users/kosta/dev/advent-of-code-17/day5/input.txt')
-contents = list(map(int, f.readlines()))
+#contents = list(map(int, f.readlines()))
+contents = [int(i) for i in f.readlines()]
+print (contents)
 
 exited = False
 cur = 0
