@@ -38,5 +38,26 @@ def get_cumulative_weight(node):
             total += get_cumulative_weight(child)
         return total
 
-for child in root.children:
-    print (get_cumulative_weight(child))
+def find_offender(node):
+    unique_weights = {}
+    for child in node.children:
+        sub_weights = get_cumulative_weight(child)
+        if not sub_weights in unique_weights:
+            unique_weights[sub_weights] = 1
+        else:
+            unique_weights[sub_weights] += 1
+    
+    offender = None
+
+    for key, val in unique_weights.items():
+        if val == 1:
+            for child in node.children:
+                if key == get_cumulative_weight(child):
+                    offender = child
+    
+    if offender != None:
+        return find_offender(offender)
+    else:
+        return node
+
+find_offender(root)
