@@ -30,8 +30,8 @@ for line in contents:
 
     if condition:
         registers[register] += change if operand == 'inc' else -change
+    
+    if highest_val == None or registers[register] > highest_val:
+        highest_val = registers[register]
 
-
-maximum_register = max(registers, key=registers.get)
-
-print(registers[maximum_register])
+print(highest_val)

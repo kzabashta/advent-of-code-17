@@ -56,8 +56,11 @@ def find_offender(node):
                     offender = child
     
     if offender != None:
+        print (offender.weight)
+        print (unique_weights)
         return find_offender(offender)
     else:
+        print (node.weight)
         return node
 
 find_offender(root)
