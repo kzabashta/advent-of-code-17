@@ -8,6 +8,7 @@ contents = f.readlines()
 registers = {}
 
 for line in contents:
+    print(line)
     struct = re.findall(
         '([a-z])\s(inc|dec)\s(-?\d+)\sif\s([a-z])\s(.*)\s(-?\d+)', line)[0]
 
