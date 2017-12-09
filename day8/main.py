@@ -30,6 +30,6 @@ for line in contents:
     if condition:
         registers[register] += change if operand == 'inc' else -change
 
-    maximum_register = max(registers, key=registers.get)
+maximum_register = max(registers, key=registers.get)
 
 print(registers[maximum_register])

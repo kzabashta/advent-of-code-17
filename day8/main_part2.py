@@ -6,6 +6,7 @@ f = open('/Users/kosta/dev/advent-of-code-17/day8/input.txt')
 contents = f.readlines()
 
 registers = {}
+highest_val = None
 
 for line in contents:
     struct = re.findall(
@@ -30,6 +31,7 @@ for line in contents:
     if condition:
         registers[register] += change if operand == 'inc' else -change
 
-    maximum_register = max(registers, key=registers.get)
+
+maximum_register = max(registers, key=registers.get)
 
 print(registers[maximum_register])
