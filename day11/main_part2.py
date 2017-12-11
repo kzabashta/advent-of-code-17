@@ -17,15 +17,15 @@ def get_distance(x_total, y_total):
     normalized_y = abs(y_total)
     total_steps = 0
 
-    while(True):
-        total_steps += 1
-        normalized_x -= 1
-        normalized_y -= 0.5
-        
+    while(True):   
         if normalized_x == 0:
             total_steps += normalized_y
             break
-    
+
+        total_steps += 1
+        normalized_x -= 1
+        normalized_y -= 0.5
+
     return total_steps
 
 x_total = 0
