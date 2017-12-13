@@ -7,17 +7,19 @@ links = f.readlines()
 graph = {}
 
 def traverse_graph(node):
+    if node == 0:
+        return True
+    node = graph[node]
     node['is_visited'] = True
     for edge in node['edges']:
-        if graph[edge] == 0:
-            return True
         if not graph[edge]['is_visited']:
-            traverse_graph(graph[edge])
+            if traverse_graph(edge):
+                return True
     return False
 
 for link in links:
     edges = re.findall('(\d+)\s<->\s(.*)', link)[0]
-    node = edges[0]
+    node = int(edges[0])
     edges = list(map(int, edges[1].split(',')))
     graph[node] = {'is_visited': False, 'edges': edges}
 
@@ -25,6 +27,11 @@ def clear_graph(graph):
     for key in graph:
         graph[key]['is_visited'] = False
 
+total = 0
+
 for node in graph:
-    print(traverse_graph(graph[node]))
+    if traverse_graph(node):
+        total += 1
     clear_graph(graph)
+
+print(total)
