@@ -3,7 +3,6 @@
 import threading
 import time
 
-registers = {}
 lock = threading.RLock()
 
 state = {
@@ -17,14 +16,20 @@ state = {
     }
 }
 
-def get_value(val):
+def get_value(val, registers):
     try:
         return int(val)
     except:
-        return get_value(registers[val])
+        try:
+            return get_value(registers[val], registers)
+        except:
+            print(registers)
 
 def play(instructions, prog_id):
     i = 0
+    registers = {'p': prog_id}
+    sending_values = 0
+
     while i < len(instructions):
         instruction = instructions[i].strip()
         
@@ -36,44 +41,50 @@ def play(instructions, prog_id):
             registers[register] = 0
 
         if command == 'snd':
-            if value == 'p':
-                value = prog_id
             lock.acquire()
+            value = get_value(register, registers)
             state[(prog_id + 1) % 2]['q'].append(value)
             lock.release()
+            sending_values += 1
         elif command == 'set':
             registers[register] = value
         elif command == 'add':
-            val = get_value(value)
-            registers[register] = get_value(register) + val
+            val = get_value(value, registers)
+            registers[register] = get_value(register, registers) + val
         elif command == 'mul':
-            val = get_value(value)
-            registers[register] = get_value(register) * val
+            val = get_value(value, registers)
+            registers[register] = get_value(register, registers) * val
         elif command == 'mod':
-            val = get_value(value)
-            registers[register] = get_value(register) % val
+            val = get_value(value, registers)
+            registers[register] = get_value(register, registers) % val
         elif command == 'rcv':
             # Deadlock detection...
             lock.acquire()
             if(len(state[prog_id]['q']) == 0):
                 state[prog_id]['is_waiting'] = True
                 lock.release()
+                time.sleep(1)
                 while(True):
                     lock.acquire()
                     if state[(prog_id + 1) % 2]['is_waiting']:
-                        print("DEADLOCK")
+                        print ("DEADLOCK")
+                        print ("PROGRAM %d SENT %d VALUES" % (prog_id, sending_values))
                         lock.release()
                         return
+                    if len(state[prog_id]['q']) > 1:
+                        registers[register] = state[prog_id]['q'][0]
+                        state[prog_id]['q'] = state[prog_id]['q'][1:]
+                        lock.release()
+                        continue
                     lock.release()
                     time.sleep(1)
             registers[register] = state[prog_id]['q'][0]
             state[prog_id]['q'] = state[prog_id]['q'][1:]
             lock.release()
         elif command == 'jgz':
-            if get_value(register) > 0:
-                i += get_value(value)
+            if get_value(register, registers) > 0:
+                i += get_value(value, registers)
                 continue
-        
         i+=1
 
 if __name__ == '__main__':
