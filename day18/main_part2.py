@@ -2,17 +2,18 @@
 
 import threading
 import time
+from queue import Queue
 
-lock = threading.RLock()
+lock = threading.Lock()
 
 state = {
     0: {
         'is_waiting': False,
-        'q': []
+        'q': Queue()
     },
     1: {
         'is_waiting': False,
-        'q': []
+        'q': Queue()
     }
 }
 
@@ -29,6 +30,7 @@ def play(instructions, prog_id):
     i = 0
     registers = {'p': prog_id}
     sending_values = 0
+    other_prog_id = (prog_id + 1) % 2
 
     while i < len(instructions):
         instruction = instructions[i].strip()
@@ -43,9 +45,10 @@ def play(instructions, prog_id):
         if command == 'snd':
             lock.acquire()
             value = get_value(register, registers)
-            state[(prog_id + 1) % 2]['q'].append(value)
-            lock.release()
+            state[other_prog_id]['q'].put(value)
+            state[other_prog_id]['is_waiting'] = False
             sending_values += 1
+            lock.release()
         elif command == 'set':
             registers[register] = value
         elif command == 'add':
@@ -59,27 +62,24 @@ def play(instructions, prog_id):
             registers[register] = get_value(register, registers) % val
         elif command == 'rcv':
             # Deadlock detection...
-            lock.acquire()
-            if(len(state[prog_id]['q']) == 0):
+            if(state[prog_id]['q'].qsize() == 0):
+                lock.acquire()
                 state[prog_id]['is_waiting'] = True
                 lock.release()
-                time.sleep(1)
                 while(True):
                     lock.acquire()
-                    if state[(prog_id + 1) % 2]['is_waiting']:
-                        print ("DEADLOCK")
+                    if not state[prog_id]['is_waiting']:
+                        print ("NOT WAITING ANYMORE \n %s" % state)
+                        lock.release()
+                        break
+                    if state[other_prog_id]['is_waiting']:
+                        print ("DEADLOCK STATE \n %s" % str(state))
                         print ("PROGRAM %d SENT %d VALUES" % (prog_id, sending_values))
                         lock.release()
                         return
-                    if len(state[prog_id]['q']) > 1:
-                        registers[register] = state[prog_id]['q'][0]
-                        state[prog_id]['q'] = state[prog_id]['q'][1:]
-                        lock.release()
-                        continue
                     lock.release()
-                    time.sleep(1)
-            registers[register] = state[prog_id]['q'][0]
-            state[prog_id]['q'] = state[prog_id]['q'][1:]
+            lock.acquire()
+            registers[register] = state[prog_id]['q'].get()
             lock.release()
         elif command == 'jgz':
             if get_value(register, registers) > 0:
